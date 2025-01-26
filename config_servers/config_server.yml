@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: config-servers
+  namespace: mongodb-sharderd-cluster
+  labels:
+    name: config-servers
+spec:
+  serviceName: config-service
+  replicas: 3
+  selector:
+    matchLabels:
+      role: config-server-replicas
+  template:
+    metadata:
+      labels:
+        role: config-server-replicas
+    containers:
+      - name: config-server-containers
+        image: mongo:6.0
+        command:
+          - mongod
+          - "--configsvr"
+          - "--replSet=configReplicas"
+          - "--bind_ip_all"
+        ports:
+          - containerPort: 27019
+        volumeMounts:
+          - name: config-server-volume
+            path: /data/db
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                name: config-server-replicas
+  volumeclaimTemplate:
+    metadata:
+      name: config-server-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: "10Gi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: config-service
+  namespace: mongodb-sharderd-cluster
+spec:
+  clusterIP: none
+  selector:
+    role: config-server-replicas
+  ports:
+    - port: 27019
+      protocols: TCP
+      targetPort: 27019
