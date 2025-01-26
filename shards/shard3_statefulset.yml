@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: shard3
+  namespace: mongodb-sharderd-cluster
+  labels:
+    name: shard3
+spec:
+  serviceName: shard3-service
+  replicas: 3
+  selector:
+    matchLabels:
+      role: shard3-replicas
+  template:
+    metadata:
+      name: shard3-replicas
+      labels:
+        role: shard3-replicas
+    containers:
+      - name: shard3-containers
+        image: mongo:6.0
+        command:
+          - mongod
+          - "--shardsvr"
+          - "--replSet=shard3Replicas"
+          - "--bind_ip_all"
+        ports:
+          - containerPort: 27017
+        volumeMounts:
+          - name: shard3-volume
+            path: /data/db/
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                role: shard3-replicas
+            topologyKey: kubernetes.io/hostname
+  volumeClaimTemplate:
+    metadata:
+      name: shard3-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: "10Gi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shard3-service
+  namespace: mongodb-sharderd-cluster
+spec:
+  clusterIP: none
+  selector:
+    role: shard3-replicas
+  ports:
+    - port: 27018
+      protocols: TCP
+      targetPort: 27018
