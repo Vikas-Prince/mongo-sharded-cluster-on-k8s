@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: percona-weekly-backup
+spec:
+  schedule: "0 23 * * 5-7"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: percona-weekly-backup
+              image: percona/percona-backup-mongodb:latest
+              command:
+                - /bin/sh
+                - c
+                - |
+                  pbm backup type=physical
+              envFrom:
+                - configMapRef:
+                    name: percona-backup-configs
+                - secretRef:
+                    name: percona-backup-secrets
+        restartPolicy: onFailure
