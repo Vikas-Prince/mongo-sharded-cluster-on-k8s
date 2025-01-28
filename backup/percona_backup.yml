@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: percona-backup-agent-deployment
+  labels:
+    role: percona-backup
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      role: percona-backup-pod
+  template:
+    metadata:
+      labels:
+        role: percona-backup-pod
+    spec:
+      containers:
+        - name: percona-backup-agent
+          image: percona/percona-backup-mongodb:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: percona-backup-configs
+                  key: mongo-uri
+
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: percona-backup-secrets
+                  key: aws-access-key-id
+
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: percona-backup-secrets
+                  key: aws-secret-access-key
+
+            - name: AWS_REGION_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: percona-backup-configs
+                  key: aws-region-name
+
+            - name: PBM_STORAGE_TYPE
+              value: "s3"
+
+            - name: PBM_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: percona-backup-configs
+                  key: pbm-bucket-name
+
+            - name: PBM_BUCKET_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: percona-backup-configs
+                  key: pbm-bucket-url
