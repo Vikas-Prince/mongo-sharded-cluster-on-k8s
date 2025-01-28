@@ -1,6 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  namespace: percona-backup
   name: percona-backup-configs
 data:
   mongo-uri: "mongodb://<username>:<password>@<host>:<port>"

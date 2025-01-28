@@ -1,6 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
+  namespace: percona-backup
   name: percona-weekly-backup
 spec:
   schedule: "0 23 * * 5-7"

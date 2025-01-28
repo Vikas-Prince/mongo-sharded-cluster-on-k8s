@@ -1,6 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
+  namespace: percona-backup
   name: pbm-incremental-backup
 spec:
   schedule: "0 3 * * 1-5"
