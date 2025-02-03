@@ -15,6 +15,7 @@ spec:
     metadata:
       labels:
         role: config-server-replicas
+  spec:
     containers:
       - name: config-server-containers
         image: mongo:6.0
@@ -34,7 +35,7 @@ spec:
           - labelSelector:
               matchLabels:
                 name: config-server-replicas
-  volumeclaimTemplate:
+  volumeclaimTemplates:
     metadata:
       name: config-server-volume
     spec:
@@ -56,4 +57,70 @@ spec:
   ports:
     - port: 27019
       protocols: TCP
+      targetPort: 27019
+
+
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: config-servers
+  namespace: mongodb-sharderd-cluster
+  labels:
+    role: config-server-replicas  # Fixed to match the selector
+spec:
+  serviceName: config-service
+  replicas: 3
+  selector:
+    matchLabels:
+      role: config-server-replicas  # Should match the pod labels
+  template:
+    metadata:
+      labels:
+        role: config-server-replicas  # Should match the selector
+    spec:
+      containers:
+        - name: config-server-containers
+          image: mongo:6.0
+          command:
+            - mongod
+            - "--configsvr"
+            - "--replSet=configReplicas"
+            - "--bind_ip_all"
+          ports:
+            - containerPort: 27019
+          volumeMounts:
+            - name: config-server-volume
+              mountPath: /data/db  # Fixed incorrect key from "path" to "mountPath"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  role: config-server-replicas  # Should match the pod labels
+              topologyKey: "kubernetes.io/hostname"  # Required field for anti-affinity
+  volumeClaimTemplates:  # Fixed incorrect key (capital "C")
+    - metadata:
+        name: config-server-volume
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: "2Gi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: config-service
+  namespace: mongodb-sharderd-cluster
+spec:
+  clusterIP: None  # Fixed to "None" (case-sensitive)
+  selector:
+    role: config-server-replicas  # Should match the pod labels
+  ports:
+    - port: 27019
+      protocol: TCP  # Fixed incorrect key from "protocols" to "protocol"
       targetPort: 27019

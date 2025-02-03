@@ -14,21 +14,22 @@ spec:
     metadata:
       labels:
         name: mongos-query-router
-    containers:
-      - name: mongos-query-router-container
-        image: mongo:6.0
-        command:
-          - mongos
-          - "--configDB=configReplicas/<dns>"
-        ports:
-          - containerPort: 27017
-    affinity:
-      podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                role: mongos-query-router
-            topologyKey: kubernetes.io/hostname
+    spec:
+      containers:
+        - name: mongos-query-router-container
+          image: mongo:6.0
+          command:
+            - mongos
+            - "--configDB=configReplicas/<dns>"
+          ports:
+            - containerPort: 27017
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  role: mongos-query-router
+              topologyKey: kubernetes.io/hostname
 
 ---
 apiVersion: v1
@@ -42,5 +43,5 @@ spec:
     name: mongos-query-router
   ports:
     - port: 27017
-      protocols: TCP
+      protocol: TCP
       targetPort: 27017

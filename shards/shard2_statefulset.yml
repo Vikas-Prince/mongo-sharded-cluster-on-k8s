@@ -3,7 +3,8 @@ kind: StatefulSet
 metadata:
   name: shard2
   namespace: mongodb-sharderd-cluster
-  labels: shard2
+  labels:
+  role: shard2
   maintainer: vikas
 spec:
   serviceName: shard2-service
@@ -15,26 +16,27 @@ spec:
     metadata:
       labels:
         role: shard2-replicas
-    containers:
-      - name: shard2
-        image: mongo:6.0
-        volumeMounts:
-          - name: shard2-data
-            path: /data/db/
-        ports:
-          - containerPort: 27017
-        commands:
-          - mongod
-          - "--shardsvr"
-          - "--replSet=shard2Replicas"
-          - "--bind_ip_all"
-    affinity:
-      podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                role: shard2-replicas
-            topologyKey: kubernetes.io/hostname
+    spec:
+      containers:
+        - name: shard2
+          image: mongo:6.0
+          volumeMounts:
+            - name: shard2-data
+              path: /data/db/
+          ports:
+            - containerPort: 27017
+          commands:
+            - mongod
+            - "--shardsvr"
+            - "--replSet=shard2Replicas"
+            - "--bind_ip_all"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  role: shard2-replicas
+              topologyKey: kubernetes.io/hostname
   volumeClaimTemplate:
     metadata:
       name: shard2-data
@@ -52,10 +54,10 @@ metadata:
   name: shard2-service
   namespace: mongodb-sharderd-cluster
 spec:
-  clusterIP: none
+  clusterIP: None
   selector:
     role: shard2-replicas
   ports:
     - port: 27018
-      protocols: TCP
+      protocol: TCP
       targetPort: 27018

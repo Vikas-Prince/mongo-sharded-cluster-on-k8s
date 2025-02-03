@@ -17,26 +17,27 @@ spec:
       name: shard1-pods
       labels:
         role: shard1-replicas
-    containers:
-      - name: shard1-replicas-container
-        image: mongo:6.0
-        volumeMounts:
-          - name: shard1-data
-            path: /data/db
-        ports:
-          - containerPort: 27018
-        command:
-          - mongod
-          - "--shardsvr"
-          - "--replSet=shard1Replicas"
-          - "--bind_ip_all"
-    affinity:
-      podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                role: shard1-replicas
-            topologyKey: kubernetes.io/hostname
+    spec:
+      containers:
+        - name: shard1-replicas-container
+          image: mongo:6.0
+          volumeMounts:
+            - name: shard1-data
+              path: /data/db
+          ports:
+            - containerPort: 27018
+          command:
+            - mongod
+            - "--shardsvr"
+            - "--replSet=shard1Replicas"
+            - "--bind_ip_all"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  role: shard1-replicas
+              topologyKey: kubernetes.io/hostname
   volumeClaimTemplates:
     metadata:
       name: shard1-data
@@ -54,10 +55,10 @@ metadata:
   name: shard1-service
   namespace: mongodb-sharderd-cluster
 spec:
-  clusterIP: none
+  clusterIP: None
   selector:
     role: shard1-replicas
   ports:
     - port: 27018
-      protocols: TCP
+      protocol: TCP
       targetPort: 27018
